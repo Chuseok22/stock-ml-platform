@@ -1,1 +1,26 @@
-.idea
+# .gitignore
+# venv
+.venv/
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+# OS
+.DS_Store
+# tooling
+.vscode/
+.idea/
+.pytest_cache/
+.mypy_cache/
+.coverage*
+# env / secrets
+.env
+*.env
+# data / models / logs (운영은 볼륨 사용 권장)
+var/
+models/
+logs/
+analytics/
+# docker
+*.pid
