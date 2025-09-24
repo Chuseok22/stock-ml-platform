@@ -4,10 +4,9 @@ from typing import Optional, Mapping, Any, Callable, Awaitable
 
 import httpx
 
-from src.config.settings import get_settings
+from src.config.settings import settings
 
 log = logging.getLogger(__name__)
-settings = get_settings()
 
 _http_client: Optional[httpx.AsyncClient] = None
 
