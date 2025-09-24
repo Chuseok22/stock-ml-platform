@@ -1,7 +1,7 @@
 # src/config/settings.py
-from functools import lru_cache
 
 from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
   storage_root: str
@@ -27,6 +27,18 @@ class Settings(BaseSettings):
   kis_app_secret: str
   kis_base_url: str
 
-@lru_cache
-def get_settings() -> Settings:
-  return Settings()
+  class Config:
+    env_file = ".env"
+    env_file_encoding = "utf-8"
+    case_sensitive = False
+
+  @property
+  def redis_url(self) -> str:
+    """Redis URL"""
+    if self.redis_password:
+      return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+    else:
+      return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
+
+settings = Settings()
