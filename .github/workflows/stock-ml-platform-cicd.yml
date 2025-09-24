@@ -1,0 +1,141 @@
+name: Stock ML Platform CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - test
+
+# 한 번에 하나만 실행(같은 브랜치 기준)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: "stock-ml-platform" # 서비스/컨테이너 베이스 이름
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Docker 빌드환경 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: DockerHub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Docker 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}:${{ github.ref_name }}
+          # 이미지 안에 빌드 메타정보(선택)
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ github.run_id }}
+          cache-to: type=inline
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 원격 서버 배포
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            echo "=== Stock ML Platform 배포 시작 ==="
+            export PATH=$PATH:/usr/local/bin
+            PW=${{ secrets.SERVER_PASSWORD }}
+            BRANCH=${{ github.ref_name }}
+            PROJECT=${{ env.PROJECT_NAME }}
+            IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}:${BRANCH}
+            PORT=8091
+            CONTAINER_NAME="${PROJECT}"
+            WORKDIR="/opt/${PROJECT}/${BRANCH}"
+            STORAGE_DIR="/volume1/project/stock-ml-platform"
+            
+            echo "브랜치: ${BRANCH}"
+            echo "이미지:  ${IMAGE}"
+            echo "컨테이너: ${CONTAINER_NAME}"
+            echo "포트:    ${PORT}"
+            echo "작업디렉터리: ${WORKDIR}"
+            
+            echo "=== 도커 이미지 풀 ==="
+            echo $PW | sudo -S docker pull "${IMAGE}"
+
+            echo "=== 기존 컨테이너 정리 ==="
+            # 실행 중인 컨테이너 중지
+            if echo $PW | sudo -S docker ps --filter "name=${CONTAINER_NAME}" --format "{{.Names}}" | grep -q "${CONTAINER_NAME}"; then
+              echo "실행 중인 컨테이너 ${CONTAINER_NAME} 중지 중..."
+              echo $PW | sudo -S docker stop "${CONTAINER_NAME}" || true
+            fi
+
+            # 모든 컨테이너 삭제
+            if echo $PW | sudo -S docker ps -a --filter "name=${CONTAINER_NAME}" --format "{{.Names}}" | grep -q "${CONTAINER_NAME}"; then
+              echo "기존 컨테이너 ${CONTAINER_NAME} 삭제 중..."
+              echo $PW | sudo -S docker rm "${CONTAINER_NAME}" || true
+            else
+              echo "정리할 기존 컨테이너가 없습니다"
+            fi
+            
+            echo "=== 디렉터리 구조 준비 ==="
+            echo $PW | sudo -S mkdir -p "${WORKDIR}"
+            echo $PW | sudo -S mkdir -p "${STORAGE_DIR}"
+            
+            # 볼륨 디렉토리 권한 설정 (컨테이너 사용자가 접근 가능하도록)
+            echo $PW | sudo -S chown -R 1000:1000 "${STORAGE_DIR}"
+            echo $PW | sudo -S chmod -R 777 "${STORAGE_DIR}"
+            
+            echo "=== 환경 파일 구성 ==="
+            # GitHub Secret에서 .env 파일 내용을 가져와서 생성
+            echo '${{ secrets.ENV_FILE }}' | sudo tee "${WORKDIR}/.env" > /dev/null
+            
+            echo "=== 컨테이너 실행 ==="
+            echo $PW | sudo -S docker run -d \
+              --name "${CONTAINER_NAME}" \
+              -p ${PORT}:8080 \
+              -e TZ=Asia/Seoul \
+              -e PORT=8080 \
+              --env-file "${WORKDIR}/.env" \
+              -v ${STORAGE_DIR}:/app/storage \
+              -v /etc/localtime:/etc/localtime:ro \
+              --restart unless-stopped \
+              "${IMAGE}"
+            
+            echo "=== 서비스 상태 확인 ==="
+            sleep 15
+            echo "컨테이너 실행 상태:"
+            echo $PW | sudo -S docker ps --filter "name=${CONTAINER_NAME}"
+            
+            echo "컨테이너 로그 (최근 30줄):"
+            echo $PW | sudo -S docker logs --tail=30 "${CONTAINER_NAME}"
+            
+            echo "=== dangling 이미지 정리 ==="
+            echo $PW | sudo -S docker image prune -af
+
+            echo "=== 배포 완료 ==="
+            echo "Stock ML Platform이 포트 ${PORT}에서 실행 중입니다."
+            echo "스토리지 디렉터리: ${STORAGE_DIR}"
