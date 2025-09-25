@@ -74,7 +74,7 @@ def _init_schedule():
   try:
     # 스케줄러 Job 모듈 로드
     load_modules([
-      "src.job.kis_scheduler"
+      "job.kis_scheduler"
     ])
 
     # 등록된 Job들을 스케줄러에 추가
