@@ -44,7 +44,7 @@ def scheduled_cron(
     trigger = CronTrigger(
         second=second, minute=minute, hour=hour,
         day=day, day_of_week=day_of_week, month=month,
-        timezone=manager.get_timezone,  # 매니저의 타임존 사용
+        timezone=manager.timezone,  # 매니저의 타임존 사용
     )
     # 나중에 일괄 등록할 수 있도록 레지스트리에 스펙 추가
     _REGISTRY.append(JobSpec(id=id, func=func, trigger=trigger, kwargs=add_job_options))

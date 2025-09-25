@@ -67,6 +67,6 @@ async def scheduler_status():
     })
   return {
     "scheduler_running": scheduler.running,
-    "timezone": str(manager.get_timezone),
+    "timezone": str(manager.timezone),
     "jobs": jobs
   }

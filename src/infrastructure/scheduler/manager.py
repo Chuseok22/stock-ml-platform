@@ -38,7 +38,7 @@ class SchedulerManager:
     self._scheduler: Optional[AsyncIOScheduler] = None
 
   @property
-  def get_timezone(self) -> ZoneInfo:
+  def timezone(self) -> ZoneInfo:
     """타임존 반환"""
     return self._tz
 
@@ -145,7 +145,7 @@ class SchedulerManager:
 
     return _runner
 
-  def _add_job(self, func: Callable[..., Any], *, id: str, trigger: Any, **options: Any):
+  def _add_job(self, func: Callable[..., Any], *, id: str, trigger: Any, **options: Any) -> None:
     """Job 추가 메서드"""
     schedule = self.get_schedule()
     wrapped = self._wrap(func)
