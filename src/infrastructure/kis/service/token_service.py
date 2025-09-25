@@ -3,8 +3,8 @@ import logging
 from typing import Any, Optional
 
 from config.settings import settings
-from src.infrastructure.kis.http.http_client import KISClient
-from src.infrastructure.redis.redis_client import RedisClient
+from infrastructure.kis.http.http_client import KISClient
+from infrastructure.redis.redis_client import RedisClient
 
 log = logging.getLogger(__name__)
 
