@@ -23,7 +23,7 @@ class KISTokenService:
     """
     token = await self._redis.get_value(KIS_TOKEN_REDIS_KEY)
     if token:
-      log.info("Redis에 저장된 토큰 사용")
+      log.debug("Redis에 저장된 토큰 사용")
       return token
     return await self.issue_and_save_token()
 

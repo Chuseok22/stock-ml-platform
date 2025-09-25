@@ -16,35 +16,58 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  """
-  FastAPI 애플리케이션 생명주기 관리
-  - 시작 시: 스케줄러 초기화 및 시작
-  - 종료 시: 스케줄러 정리
-  """
+  """FastAPI 애플리케이션 시작"""
   # 로깅 초기화
-  logging.basicConfig(
-      level=settings.log_level,
-      format="%(asctime)s %(levelname)s %(name)s - %(message)s",
-  )
-  log.info("로깅 초기화 완료")
+  _init_logger()
 
   # Redis 연결 확인 (ping)
+  await _init_redis()
+
+  # KIS 토큰 워밍업
+  await _init_kis_token()
+
+  # 스케줄러 등록
+  _init_schedule()
+
+  yield  # 애플리케이션 실행
+
+
+def _init_logger():
+  """로깅 초기화"""
+  try:
+    logging.basicConfig(
+        level=settings.log_level,
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    )
+    log.info("[애플리케이션 시작] 로깅 초기화 완료")
+  except Exception:
+    log.exception("[애플리케이션 시작] 로깅 초기화 실패")
+    raise
+
+
+async def _init_redis():
+  """Redis 연결 확인"""
   try:
     redis_client = RedisClient()
     await redis_client.ping()
-    log.info("Redis 연결 확인(ping) 성공")
+    log.info("[애플리케이션 시작] Redis 연결 확인(ping) 성공")
   except Exception:
-    log.exception("서버 시작 시 Redis 연결 실패")
+    log.exception("[애플리케이션 시작] Redis 연결 실패")
     raise
 
-  # KIS 토큰 워밍업
+
+async def _init_kis_token():
+  """KIS 토큰 확인"""
   kis_token_service = KISTokenService()
   try:
     token = await kis_token_service.get_token()
-    log.info("KIS 토큰 워밍업 완료 (길이=%s)", len(token))
+    log.info("[애플리케이션 시작] KIS 토큰 워밍업 완료 (길이=%s)", len(token))
   except Exception:
-    log.exception("KIS 토큰 워밍업 실패 (서비스는 계속 작동)")
+    log.exception("[애플리케이션 시작] KIS 토큰 워밍업 실패")
+    raise
 
+
+def _init_schedule():
   try:
     # 스케줄러 Job 모듈 로드
     load_modules([
@@ -56,12 +79,9 @@ async def lifespan(app: FastAPI):
 
     # 스케줄러 시작
     manager.start_schedule()
-    log.info("애플리케이션 시작 완료 - 스케줄러 활성화")
-
-    yield  # 애플리케이션 실행
-
-  except Exception as e:
-    log.error("애플리케이션 시작 중 오류 발생")
+    log.info("[애플리케이션 시작] 스케줄러 활성화 완료")
+  except Exception:
+    log.exception("[애플리케이션 시작] 스케줄러 등록 실패")
     raise
   finally:
     # 애플리케이션 종료 시 스케줄러 정리
