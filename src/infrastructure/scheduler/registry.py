@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from apscheduler.triggers.cron import CronTrigger
 
-from src.infrastructure.scheduler.manager import JobSpec, manager
+from infrastructure.scheduler.manager import JobSpec, manager
 
 log = logging.getLogger(__name__)
 

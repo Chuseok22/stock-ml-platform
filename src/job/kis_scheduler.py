@@ -1,17 +1,18 @@
 # src/job/kis_scheduler.py
 import logging
 
-from src.infrastructure.kis.service.token_service import KISTokenService
-from src.infrastructure.scheduler.registry import scheduled_cron
+from infrastructure.kis.service.token_service import KISTokenService
+from infrastructure.scheduler.registry import scheduled_cron
 
 log = logging.getLogger(__name__)
 
+
 @scheduled_cron(
     id="kis_token.refresh",
-    hour=0, minute=0, second=0, # 매일 00:00:00
-    replace_existing=True, # 동일 ID가 있으면 교체 (중복 등록 방지)
-    max_instances=1, # 중복 실행 방지
-    misfire_grace_time=600 # 누락된 트리거는 10분 이내 복구 허용
+    hour=0, minute=0, second=0,  # 매일 00:00:00
+    replace_existing=True,  # 동일 ID가 있으면 교체 (중복 등록 방지)
+    max_instances=1,  # 중복 실행 방지
+    misfire_grace_time=600  # 누락된 트리거는 10분 이내 복구 허용
 )
 async def refresh_kis_token_job() -> None:
   """

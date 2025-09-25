@@ -8,8 +8,8 @@ from fastapi import FastAPI
 from config.settings import settings
 from infrastructure.kis.service.token_service import KISTokenService
 from infrastructure.redis.redis_client import RedisClient
-from src.infrastructure.scheduler.manager import manager
-from src.infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
+from infrastructure.scheduler.manager import manager
+from infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
 
 log = logging.getLogger(__name__)
 
@@ -28,8 +28,11 @@ async def lifespan(app: FastAPI):
 
   # 스케줄러 등록
   _init_schedule()
-
-  yield  # 애플리케이션 실행
+  try:
+    yield  # 애플리케이션 실행
+  finally:
+    manager.shutdown_schedule()
+    log.info("[애플리케이션 종료] - 스케줄러 정리 완료")
 
 
 def _init_logger():
@@ -83,10 +86,6 @@ def _init_schedule():
   except Exception:
     log.exception("[애플리케이션 시작] 스케줄러 등록 실패")
     raise
-  finally:
-    # 애플리케이션 종료 시 스케줄러 정리
-    manager.shutdown_schedule()
-    log.info("애플리케이션 종료 - 스케줄러 정리")
 
 
 app = FastAPI(

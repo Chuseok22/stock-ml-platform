@@ -4,7 +4,7 @@ from typing import Optional
 
 import redis.asyncio as redis
 
-from src.config.settings import settings
+from config.settings import settings
 
 log = logging.getLogger(__name__)
 

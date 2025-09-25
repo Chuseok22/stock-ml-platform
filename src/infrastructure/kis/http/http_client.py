@@ -4,7 +4,7 @@ from typing import Optional, Mapping, Any, Callable, Awaitable
 
 import httpx
 
-from src.config.settings import settings
+from config.settings import settings
 
 log = logging.getLogger(__name__)
 
