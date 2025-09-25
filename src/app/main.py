@@ -5,6 +5,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from config.settings import settings
+from infrastructure.kis.service.token_service import KISTokenService
+from infrastructure.redis.redis_client import RedisClient
 from src.infrastructure.scheduler.manager import manager
 from src.infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
 
@@ -18,6 +21,30 @@ async def lifespan(app: FastAPI):
   - 시작 시: 스케줄러 초기화 및 시작
   - 종료 시: 스케줄러 정리
   """
+  # 로깅 초기화
+  logging.basicConfig(
+      level=settings.log_level,
+      format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+  )
+  log.info("로깅 초기화 완료")
+
+  # Redis 연결 확인 (ping)
+  try:
+    redis_client = RedisClient()
+    await redis_client.ping()
+    log.info("Redis 연결 확인(ping) 성공")
+  except Exception:
+    log.exception("서버 시작 시 Redis 연결 실패")
+    raise
+
+  # KIS 토큰 워밍업
+  kis_token_service = KISTokenService()
+  try:
+    token = await kis_token_service.get_token()
+    log.info("KIS 토큰 워밍업 완료 (길이=%s)", len(token))
+  except Exception:
+    log.exception("KIS 토큰 워밍업 실패 (서비스는 계속 작동)")
+
   try:
     # 스케줄러 Job 모듈 로드
     load_modules([
