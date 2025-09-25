@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class RedisClient:
   def __init__(self):
     """Redis Client 연결(비동기)"""
-    self.client = redis.Redis = redis.from_url(
+    self.client = redis.from_url(
         settings.redis_url,
         decode_responses=True,
         socket_connect_timeout=5,
@@ -25,10 +25,10 @@ class RedisClient:
     """연결 테스트(비동기)"""
     try:
       await self.client.ping()
-      log.info(f"Redis 연결 성공")
+      log.debug("Redis 연결 성공")
       return True
-    except Exception as e:
-      log.error(f"Redis 연결 실패: {e}")
+    except Exception:
+      log.exception("Redis 연결 실패")
       raise
 
   async def get_value(self, key: str) -> Optional[str]:
@@ -36,20 +36,20 @@ class RedisClient:
     try:
       return await self.client.get(key)
     except Exception as e:
-      log.error(f"Key: {key} 에 해당하는 값 조회 실패: {e}")
+      log.error("Key: %s 에 해당하는 값 조회 실패: %s", key, e)
       return None
 
   async def set_value(self, key: str, value: str, ttl: Optional[int] = None) -> bool:
     """Redis TTL 저장(비동기)"""
     try:
       if ttl:
-        log.info(f"Redis TTL 저장 key:{key}, ttl:{ttl}")
+        log.debug("Redis TTL 저장 key:%s, ttl:%s", key, ttl)
         return bool(await self.client.setex(key, ttl, value))
       else:
-        log.info(f"Redis 저장 (TTL 미설정) key:{key}")
+        log.debug("Redis 저장 (TTL 미설정) key:%s", key)
         return bool(await self.client.set(key, value))
     except Exception as e:
-      log.error(f"Redis TTL 저장 실패 key:{key}, ttl:{ttl}, 오류:{e}")
+      log.error("Redis TTL 저장 실패 key:%s, ttl:%s, 오류:%s", key, ttl, e)
       return False
 
   async def delete_value(self, key: str) -> bool:
@@ -57,7 +57,7 @@ class RedisClient:
     try:
       return bool(await self.client.delete(key))
     except Exception as e:
-      log.error(f"Key: {key} 에 해당하는 데이터 삭제 실패: {e}")
+      log.error("Key: %s 에 해당하는 데이터 삭제 실패: %s", key, e)
       return False
 
   async def get_ttl(self, key: str) -> Optional[int]:

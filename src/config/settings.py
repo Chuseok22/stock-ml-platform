@@ -9,6 +9,9 @@ class Settings(BaseSettings):
   log_dir: str
   model_dir: str
 
+  # Logging
+  log_level: str
+
   # Postgres
   db_host: str
   db_port: str

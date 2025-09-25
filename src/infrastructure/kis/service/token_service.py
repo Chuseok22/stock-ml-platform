@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Optional
 
+from config.settings import settings
 from src.infrastructure.kis.http.http_client import KISClient
 from src.infrastructure.redis.redis_client import RedisClient
 
@@ -22,6 +23,7 @@ class KISTokenService:
     """
     token = await self._redis.get_value(KIS_TOKEN_REDIS_KEY)
     if token:
+      log.debug("Redis에 저장된 토큰 사용")
       return token
     return await self.issue_and_save_token()
 
@@ -29,8 +31,11 @@ class KISTokenService:
     """
     KIS 토큰 신규 발급 후 Redis TTL 저장
     """
+    log.info("KIS 토큰 발급 진행")
     payload: dict[str, Any] = {
       "grant_type": "client_credentials",
+      "appkey": settings.kis_app_key,
+      "appsecret": settings.kis_app_secret,
     }
     response = await self.client.post(
         "/oauth2/tokenP",
