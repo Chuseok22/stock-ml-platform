@@ -4,8 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     TZ=Asia/Seoul \
-    PYTHONPATH=/app \
-    APP_MODULE=src.app.main:app \
+    PYTHONPATH=/app/src \
+    APP_MODULE=app.main:app \
     HOST=0.0.0.0 \
     PORT=8080
 
