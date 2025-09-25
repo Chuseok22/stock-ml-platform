@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class RedisClient:
   def __init__(self):
     """Redis Client 연결(비동기)"""
-    self.client = redis.Redis = redis.from_url(
+    self.client = redis.from_url(
         settings.redis_url,
         decode_responses=True,
         socket_connect_timeout=5,
