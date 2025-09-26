@@ -2,11 +2,12 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
 from config.settings import settings
-from infrastructure.db.session import db_ping
+from infrastructure.db.session import db_ping, create_tables, get_table_info
 from infrastructure.kis.service.token_service import KISTokenService
 from infrastructure.redis.redis_client import RedisClient
 from infrastructure.scheduler.manager import manager
@@ -51,16 +52,27 @@ def _init_logger():
     log.exception("[애플리케이션 시작] 로깅 초기화 실패")
     raise
 
+
 async def _init_postgres():
-  """Postgres 연결 확인"""
+  """Postgres 연결 확인 및 테이블 생성"""
   try:
+    # 연결 확인 (ping)
     ok = await db_ping()
     if not ok:
       raise RuntimeError("Postgres DB ping 실패")
     log.info("[애플리케이션 시작] Postgres 초기화 완료")
+
+    # 테이블 생성 (없는 테이블만)
+    await create_tables()
+    log.info("[애플리케이션 시작] Postgres 테이블 생성/확인 완료")
+
+    # 생성된 테이블 정보 로그
+    table_info = await get_table_info()
+    log.info(f"[애플리케이션 시작] 현재 테이블 수: {len(table_info)}개")
   except Exception:
     log.exception("[애플리케이션 시작] Postgres 초기화 실패")
     raise
+
 
 async def _init_redis():
   """Redis 연결 확인"""
@@ -130,3 +142,19 @@ async def scheduler_status():
     "timezone": str(manager.timezone),
     "jobs": jobs
   }
+
+
+@app.get("/db/tables")
+async def get_database_tables() -> dict[str, Any]:
+  """데이터베이스 테이블 정보 조회 엔드포인트"""
+  try:
+    table_info = await get_table_info()
+    return {
+      "table_count": len(table_info),
+      "tables": table_info
+    }
+  except Exception as e:
+    log.exception("테이블 정보 조회 실패")
+    return {
+      "error": str(e)
+    }
