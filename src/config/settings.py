@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     case_sensitive = False
 
   @property
+  def postgres_url(self) -> str:
+    """Postgres URL"""
+    return (
+      f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
+      f"@{self.db_host}:{self.db_port}/{self.db_name}"
+    )
+
+  @property
   def redis_url(self) -> str:
     """Redis URL"""
     if self.redis_password:
