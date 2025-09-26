@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from config.settings import settings
+from infrastructure.db.session import db_ping
 from infrastructure.kis.service.token_service import KISTokenService
 from infrastructure.redis.redis_client import RedisClient
 from infrastructure.scheduler.manager import manager
@@ -19,6 +20,9 @@ async def lifespan(app: FastAPI):
   """FastAPI 애플리케이션 시작"""
   # 로깅 초기화
   _init_logger()
+
+  # Postgres 연결 확인 (ping)
+  await _init_postgres()
 
   # Redis 연결 확인 (ping)
   await _init_redis()
@@ -47,6 +51,16 @@ def _init_logger():
     log.exception("[애플리케이션 시작] 로깅 초기화 실패")
     raise
 
+async def _init_postgres():
+  """Postgres 연결 확인"""
+  try:
+    ok = await db_ping()
+    if not ok:
+      raise RuntimeError("Postgres DB ping 실패")
+    log.info("[애플리케이션 시작] Postgres 초기화 완료")
+  except Exception:
+    log.exception("[애플리케이션 시작] Postgres 초기화 실패")
+    raise
 
 async def _init_redis():
   """Redis 연결 확인"""
