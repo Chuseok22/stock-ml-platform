@@ -19,7 +19,7 @@ __pycache__/
 *.env
 # data / models / logs (운영은 볼륨 사용 권장)
 var/
-models/
+# models/
 logs/
 analytics/
 # docker
