@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncGenerator, Optional, AsyncIterator
+from typing import Optional, AsyncIterator
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker, AsyncSession
