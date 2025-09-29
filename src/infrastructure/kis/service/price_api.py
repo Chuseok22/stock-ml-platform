@@ -54,5 +54,3 @@ class KISPriceAPI:
     response = await self._client.get(path, tr_id=tr_id, auth=True, params=params)
 
     return to_daily_price_dtos(ticker, response)
-
-

@@ -53,7 +53,7 @@ class ResponseBodyOutput1(BaseModel):
   pbr: str
   itewhol_loan_rmnd_ratem: str
 
-  model_config = {"extra": "ignore"}
+  model_config = { "extra": "ignore" }
 
 
 class ResponseBodyOutput2(BaseModel):
@@ -71,7 +71,7 @@ class ResponseBodyOutput2(BaseModel):
   prdy_vrss: str
   revl_issu_reas: str
 
-  model_config = {"extra": "ignore"}
+  model_config = { "extra": "ignore" }
 
 
 class ResponseBody(BaseModel):
@@ -81,7 +81,7 @@ class ResponseBody(BaseModel):
   output1: ResponseBodyOutput1
   output2: List[ResponseBodyOutput2] = Field(default_factory=list)
 
-  model_config = {"extra": "ignore"}
+  model_config = { "extra": "ignore" }
 
 
 class KISDomesticDailyResponse(BaseModel):
@@ -92,7 +92,7 @@ class KISDomesticDailyResponse(BaseModel):
   header: Optional[ResponseHeader] = None
   body: ResponseBody
 
-  model_config = {"extra": "ignore"}
+  model_config = { "extra": "ignore" }
 
 
 # ------------------------- DTO 변환기 -------------------------
