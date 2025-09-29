@@ -8,6 +8,7 @@ class Settings(BaseSettings):
   analytics_dir: str
   log_dir: str
   model_dir: str
+  mst_dir: str
 
   # Logging
   log_level: str
