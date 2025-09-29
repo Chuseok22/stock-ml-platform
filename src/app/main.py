@@ -2,10 +2,12 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any
 
 from fastapi import FastAPI
 
+from app.routers.db import router as db_router
+from app.routers.health import router as health_router
+from app.routers.scheduler import router as scheduler_router
 from config.settings import settings
 from infrastructure.db.session import db_ping, create_tables, get_table_info
 from infrastructure.kis.service.token_service import KISTokenService
@@ -119,42 +121,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
-@app.get("/health")
-async def health():
-  return { "status": "ok", "message": "시스템이 정상적으로 작동중입니다." }
-
-
-@app.get("/scheduler/status")
-async def scheduler_status():
-  """스케줄러 상태 확인 엔드포인트"""
-  scheduler = manager.get_schedule()
-  jobs = []
-
-  for job in scheduler.get_jobs():
-    jobs.append({
-      "id": job.id,
-      "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-      "trigger": str(job.trigger)
-    })
-  return {
-    "scheduler_running": scheduler.running,
-    "timezone": str(manager.timezone),
-    "jobs": jobs
-  }
-
-
-@app.get("/db/tables")
-async def get_database_tables() -> dict[str, Any]:
-  """데이터베이스 테이블 정보 조회 엔드포인트"""
-  try:
-    table_info = await get_table_info()
-    return {
-      "table_count": len(table_info),
-      "tables": table_info
-    }
-  except Exception as e:
-    log.exception("테이블 정보 조회 실패")
-    return {
-      "error": str(e)
-    }
+app.include_router(health_router)
+app.include_router(db_router)
+app.include_router(scheduler_router)
