@@ -11,6 +11,7 @@ from app.routers.scheduler import router as scheduler_router
 from config.settings import settings
 from infrastructure.db.session import db_ping, create_tables, get_table_info
 from infrastructure.kis.service.token_service import KISTokenService
+from infrastructure.kis.stock.service.stock_service import get_kospi_mst_file, ingest_kospi_master_from_file
 from infrastructure.redis.redis_client import RedisClient
 from infrastructure.scheduler.manager import manager
 from infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
@@ -32,6 +33,9 @@ async def lifespan(app: FastAPI):
 
   # KIS 토큰 워밍업
   await _init_kis_token()
+
+  # KOSPI mst 파일 다운로드 & stock 데이터 저장
+  await _init_stocks()
 
   # 스케줄러 등록
   _init_schedule()
@@ -96,6 +100,21 @@ async def _init_kis_token():
   except Exception:
     log.exception("[애플리케이션 시작] KIS 토큰 워밍업 실패")
     raise
+
+
+async def _init_stocks():
+  """KOSPI mst 파일 다운로드 & stock 데이터 저장"""
+  try:
+    mst_path = await get_kospi_mst_file(settings.mst_dir)
+  except Exception:
+    log.exception("[애플리케이션 시작] KOSPI mst 파일 다운로드 실패")
+    raise
+  try:
+    await ingest_kospi_master_from_file(mst_path)
+  except Exception:
+    log.exception("[애플리케이션 시작] KOSPI mst 파일 데이터 저장 실패")
+    raise
+  log.info("[애플리케이션 시작] KOSPI mst 파일 다운로드 & 저장 완료")
 
 
 def _init_schedule():
