@@ -22,5 +22,6 @@ var/
 # models/
 logs/
 analytics/
+storage
 # docker
 *.pid
