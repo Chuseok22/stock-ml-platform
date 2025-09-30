@@ -39,8 +39,8 @@ class Stock(TimestampMixin, Base):
   )
 
   # 관계 설정 (lazy="selectin"으로 변경)
-  market = relationship("Market", back_populates="stock", lazy="selectin")
-  sector = relationship("Sector", back_populates="stock", lazy="selectin")
+  market = relationship("Market", back_populates="stocks", lazy="selectin")
+  sector = relationship("Sector", back_populates="stocks", lazy="selectin")
 
   # 가격 데이터
   daily_prices = relationship("DailyPrice", back_populates="stock", lazy="selectin", passive_deletes=True)
