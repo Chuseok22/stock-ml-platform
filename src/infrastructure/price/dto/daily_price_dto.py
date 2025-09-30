@@ -21,42 +21,6 @@ class ResponseHeader(BaseModel):
   }
 
 
-class ResponseBodyOutput1(BaseModel):
-  # 모든 원본은 문자열로 들어오므로 str 타입 유지 (숫자필요시 변환은 변환기에서 수행)
-  prdy_vrss: str
-  prdy_vrss_sign: str
-  prdy_ctrt: str
-  stck_prdy_clpr: str
-  acml_vol: str
-  acml_tr_pbmn: str
-  hts_kor_isnm: str
-  stck_prpr: str
-  stck_shrn_iscd: str
-  prdy_vol: str
-  stck_mxpr: str
-  stck_llam: str
-  stck_oprc: str
-  stck_hgpr: str
-  stck_lwpr: str
-  stck_prdy_oprc: str
-  stck_prdy_hgpr: str
-  stck_prdy_lwpr: str
-  askp: str
-  bidp: str
-  prdy_vrss_vol: str
-  vol_tnrt: str
-  stck_fcam: str
-  lstn_stcn: str
-  cpfn: str
-  hts_avls: str
-  per: str
-  eps: str
-  pbr: str
-  itewhol_loan_rmnd_ratem: str
-
-  model_config = { "extra": "ignore" }
-
-
 class ResponseBodyOutput2(BaseModel):
   stck_bsop_date: str
   stck_clpr: str
@@ -75,23 +39,12 @@ class ResponseBodyOutput2(BaseModel):
   model_config = { "extra": "ignore" }
 
 
-class ResponseBody(BaseModel):
-  rt_cd: str
-  msg_cd: str
-  msg1: str
-  output1: ResponseBodyOutput1
-  output2: List[ResponseBodyOutput2] = Field(default_factory=list)
-
-  model_config = { "extra": "ignore" }
-
-
 class KISDomesticDailyResponse(BaseModel):
-  """
-  KIS 응답 최상위 래퍼 (보통 header/body 구조)
-  일부 API는 header가 없을 수도 있으니 optional 처리.
-  """
-  header: Optional[ResponseHeader] = None
-  body: ResponseBody
+  """KIS 응답 최상위 래퍼"""
+  rt_cd: Optional[str] = None
+  msg_cd: Optional[str] = None
+  msg1: Optional[str] = None
+  output2: List[ResponseBodyOutput2] = Field(default_factory=list)
 
   model_config = { "extra": "ignore" }
 
@@ -127,7 +80,7 @@ def to_daily_price_dtos(ticker: str, payload: dict) -> List[DailyPriceDTO]:
   parsed = KISDomesticDailyResponse.model_validate(payload)
 
   out: List[DailyPriceDTO] = []
-  for row in parsed.body.output2:
+  for row in parsed.output2:
     d = to_date8(row.stck_bsop_date)
     out.append(
         DailyPriceDTO(
