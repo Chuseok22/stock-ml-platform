@@ -1,5 +1,6 @@
 # src/infrastructure/db/session.py
 import logging
+from contextlib import asynccontextmanager
 from typing import Optional, AsyncIterator
 
 from sqlalchemy import text
@@ -55,6 +56,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
   return _session_factory
 
 
+@asynccontextmanager
 async def get_session() -> AsyncIterator[AsyncSession]:
   """
   비동기 데이터베이스 세션 의존성
