@@ -11,10 +11,11 @@ from app.routers.scheduler import router as scheduler_router
 from config.settings import settings
 from infrastructure.db.session import db_ping, create_tables, get_table_info
 from infrastructure.kis.service.token_service import KISTokenService
-from infrastructure.kis.stock.service.stock_service import get_kospi_mst_file, ingest_kospi_master_from_file
+from infrastructure.market.service.market_service import seed_default_markets
 from infrastructure.redis.redis_client import RedisClient
 from infrastructure.scheduler.manager import manager
 from infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
+from infrastructure.stock.service.stock_service import seed_kospi_top30
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +35,11 @@ async def lifespan(app: FastAPI):
   # KIS 토큰 워밍업
   await _init_kis_token()
 
-  # KOSPI mst 파일 다운로드 & stock 데이터 저장
-  await _init_stocks()
+  # 기본 Market 정보 저장
+  await _init_markets()
+
+  # KOSPI stock 데이터 저장
+  await _init_kospi_stocks()
 
   # 스케줄러 등록
   _init_schedule()
@@ -102,19 +106,24 @@ async def _init_kis_token():
     raise
 
 
-async def _init_stocks():
-  """KOSPI mst 파일 다운로드 & stock 데이터 저장"""
+async def _init_markets():
+  """기본 Market 데이터 추가"""
   try:
-    mst_path = await get_kospi_mst_file(settings.mst_dir)
+    await seed_default_markets()
+    log.info("[애플리케이션 시작] Market 기본 정보 저장 성공")
   except Exception:
-    log.exception("[애플리케이션 시작] KOSPI mst 파일 다운로드 실패")
+    log.exception("[애플리케이션 시작] Market 시드 저장 실패")
     raise
+
+
+async def _init_kospi_stocks():
+  """KOSPI stock 데이터 저장"""
   try:
-    await ingest_kospi_master_from_file(mst_path)
+    upserted = await seed_kospi_top30()
+    log.info("[애플리케이션 시작] KOSPI stock 데이터 저장 완료: %s 건", upserted)
   except Exception:
-    log.exception("[애플리케이션 시작] KOSPI mst 파일 데이터 저장 실패")
+    log.exception("[애플리케이션 시작] KOSPI stock 데이터 저장 실패")
     raise
-  log.info("[애플리케이션 시작] KOSPI mst 파일 다운로드 & 저장 완료")
 
 
 def _init_schedule():
