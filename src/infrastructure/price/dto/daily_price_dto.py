@@ -1,9 +1,10 @@
-# src/dto/kis/daily_price_dto.py
+# src/infrastructure/price/dto/daily_price_dto.py
+from dataclasses import dataclass
+from datetime import date
 from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
-from infrastructure.kis.service.price_api import DailyPriceDTO
 from utils.decimal_util import to_date8, to_float, to_int
 
 
@@ -93,6 +94,26 @@ class KISDomesticDailyResponse(BaseModel):
   body: ResponseBody
 
   model_config = { "extra": "ignore" }
+
+
+@dataclass(frozen=True)
+class DailyPriceDTO:
+  """
+  DB upsert에 바로 넣기 위한 표준 스키마
+  """
+  ticker: str
+  trade_date: date
+  open_price: float
+  high_price: float
+  low_price: float
+  close_price: float
+  volume: int
+  trading_value: Optional[float] = None
+  adjusted_close: Optional[float] = None
+  change_rate: Optional[float] = None
+  change_amount: Optional[float] = None
+  market_cap: Optional[float] = None
+  shares_outstanding: Optional[int] = None
 
 
 # ------------------------- DTO 변환기 -------------------------

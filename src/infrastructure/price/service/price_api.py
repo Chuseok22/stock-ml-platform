@@ -1,30 +1,9 @@
-# src/infrastructure/kis/service/price_api.py
-from dataclasses import dataclass
+# src/infrastructure/price/service/price_api.py
 from datetime import date
-from typing import List, Optional
+from typing import List
 
-from dto.kis.daily_price_dto import to_daily_price_dtos
 from infrastructure.kis.http.http_client import KISClient
-
-
-@dataclass(frozen=True)
-class DailyPriceDTO:
-  """
-  DB upsert에 바로 넣기 위한 표준 스키마
-  """
-  ticker: str
-  trade_date: date
-  open_price: float
-  high_price: float
-  low_price: float
-  close_price: float
-  volume: int
-  trading_value: Optional[float] = None
-  adjusted_close: Optional[float] = None
-  change_rate: Optional[float] = None
-  change_amount: Optional[float] = None
-  market_cap: Optional[float] = None
-  shares_outstanding: Optional[int] = None
+from infrastructure.price.dto.daily_price_dto import to_daily_price_dtos, DailyPriceDTO
 
 
 class KISPriceAPI:
