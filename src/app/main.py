@@ -2,6 +2,8 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI
 
@@ -9,9 +11,11 @@ from app.routers.db import router as db_router
 from app.routers.health import router as health_router
 from app.routers.scheduler import router as scheduler_router
 from config.settings import settings
+from core.models import MarketType
 from infrastructure.db.session import db_ping, create_tables, get_table_info
 from infrastructure.kis.service.token_service import KISTokenService
 from infrastructure.market.service.market_service import seed_default_markets
+from infrastructure.price.service.price_service import save_daily_prices
 from infrastructure.redis.redis_client import RedisClient
 from infrastructure.scheduler.manager import manager
 from infrastructure.scheduler.registry import load_modules, schedule_registered_jobs
@@ -40,6 +44,9 @@ async def lifespan(app: FastAPI):
 
   # KOSPI stock 데이터 저장
   await _init_kospi_stocks()
+
+  # KOSPI daily_price 데이터 저장
+  await _init_kospi_daily_price()
 
   # 스케줄러 등록
   _init_schedule()
@@ -123,6 +130,23 @@ async def _init_kospi_stocks():
     log.info("[애플리케이션 시작] KOSPI stock 데이터 저장 완료: %s 건", upserted)
   except Exception:
     log.exception("[애플리케이션 시작] KOSPI stock 데이터 저장 실패")
+    raise
+
+
+async def _init_kospi_daily_price():
+  """KOSPI daily_price 데이터 저장 (1달 전~현재)"""
+  _timezone = ZoneInfo("Asia/Seoul")
+  _today = datetime.now(_timezone).date()
+  _start = _today - timedelta(days=31)
+  try:
+    upserted = await save_daily_prices(
+        market_codes=[MarketType.KOSPI],
+        start=_start,
+        end=_today
+    )
+    log.info("[애플리케이션 시작] KOSPI 일봉 초기 저장 완료: %s 건 (%s ~ %s)", upserted, _start, _today)
+  except Exception:
+    log.exception("[애플리케이션 시작] KOSPI 일봉 초기 저장 실패")
     raise
 
 
