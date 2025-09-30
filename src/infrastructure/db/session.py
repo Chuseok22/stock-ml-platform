@@ -97,7 +97,7 @@ async def create_tables() -> None:
     async with engine.begin() as conn:
       # 모든 테이블 생성 (이미 존재하는 테이블 무시)
       await conn.run_sync(Base.metadata.create_all)
-    log.debug("데이터베에스 테이블 생성/확인 완료")
+    log.debug("데이터베이스 테이블 생성/확인 완료")
   except Exception:
     log.exception("테이터베이스 테이블 생성 실패")
     raise

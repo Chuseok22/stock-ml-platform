@@ -4,8 +4,8 @@
 """
 from sqlalchemy import Column, Integer, String, Date, DateTime, Text, Enum as SQLEnum
 
-from src.core.models.base import TimestampMixin, DataCollectionStatus
-from src.infrastructure.db.session import Base
+from core.models.base import TimestampMixin, DataCollectionStatus
+from infrastructure.db.session import Base
 
 
 class DataCollectionLog(TimestampMixin, Base):

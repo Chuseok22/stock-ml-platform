@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import MarketType, Stock, Market, DailyPrice
-from infrastructure.price.service.price_api import DailyPriceDTO
+from infrastructure.price.dto.daily_price_dto import DailyPriceDTO
 
 
 async def get_stock_id_map_by_market(

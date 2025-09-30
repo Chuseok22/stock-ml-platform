@@ -35,7 +35,7 @@ async def seed_default_markets() -> int:
     try:
       upserted = await upsert_markets(session, seeds)
       await session.commit()
-      log.info("[MARKTE_SERVICE] 기본 시장 데이터 UPSERT 완료: %s 건", upserted)
+      log.info("[MARKET_SERVICE] 기본 시장 데이터 UPSERT 완료: %s 건", upserted)
       return upserted
     except Exception:
       await session.rollback()

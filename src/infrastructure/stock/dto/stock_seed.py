@@ -1,7 +1,7 @@
 # src/infrastructure/stock/dto/stock_seed.py
-import decimal
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 from typing import Optional
 
 
@@ -10,5 +10,5 @@ class StockSeed:
   ticker: str
   stock_name: str
   listing_date: Optional[date]
-  face_value: Optional[decimal]
+  face_value: Optional[Decimal]
   listing_shares: Optional[int]
