@@ -8,6 +8,7 @@ class Settings(BaseSettings):
   analytics_dir: str
   log_dir: str
   model_dir: str
+  mst_dir: str
 
   # Logging
   log_level: str
@@ -34,6 +35,14 @@ class Settings(BaseSettings):
     env_file = ".env"
     env_file_encoding = "utf-8"
     case_sensitive = False
+
+  @property
+  def postgres_url(self) -> str:
+    """Postgres URL"""
+    return (
+      f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
+      f"@{self.db_host}:{self.db_port}/{self.db_name}"
+    )
 
   @property
   def redis_url(self) -> str:
