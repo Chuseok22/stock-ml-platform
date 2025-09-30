@@ -1,4 +1,4 @@
-# src/infrastructure/kis/stock/repository/stock_repository.py
+# src/infrastructure/stock/repository/stock_repository.py
 from typing import Iterable
 
 from sqlalchemy import select, func
@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import MarketType, Market, Stock
-from infrastructure.kis.stock.service.stock_mst_parser import StockSeed
+from infrastructure.stock.dto.stock_seed import StockSeed
 
 
 async def find_market_id_by_market_code(session: AsyncSession, market_code: MarketType) -> int:
